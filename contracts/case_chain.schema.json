@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "广告审查案件完整链路（reports.chain 输出）",
+  "type": "object",
+  "required": [
+    "case_id",
+    "title",
+    "status",
+    "queue",
+    "asset",
+    "ai_label",
+    "product",
+    "parties",
+    "scripts",
+    "placements",
+    "conflicts",
+    "tasks",
+    "current_version",
+    "timeline"
+  ],
+  "properties": {
+    "case_id": {"type": "string", "minLength": 1},
+    "title": {"type": "string"},
+    "status": {
+      "type": "string",
+      "enum": ["草稿", "待审核", "挂起调查", "已通过", "已驳回", "已下架"]
+    },
+    "queue": {"type": "string"},
+    "asset": {
+      "type": "object",
+      "required": ["asset_id", "name", "white_coat", "generator",
+                   "model_provider", "identity_authorization"],
+      "properties": {
+        "asset_id": {"type": "string"},
+        "white_coat": {"type": "boolean"},
+        "generator": {"type": "string", "description": "数字人制作机构"},
+        "model_provider": {"type": "string"},
+        "source_prompt_ref": {"type": ["string", "null"]},
+        "generation_log_ref": {"type": ["string", "null"]},
+        "identity_authorization": {
+          "type": ["object", "null"],
+          "required": ["auth_id", "owner", "scope", "valid", "on_file"],
+          "properties": {
+            "auth_id": {"type": "string"},
+            "owner": {"type": "string", "description": "医务身份权利人"},
+            "scope": {"type": "string"},
+            "license_no": {"type": ["string", "null"]},
+            "valid": {"type": "string", "description": "有效期起~止"},
+            "on_file": {"type": "boolean"}
+          }
+        }
+      }
+    },
+    "ai_label": {
+      "type": "object",
+      "required": ["conspicuous", "implicit_watermark", "complete"]
+    },
+    "product": {
+      "type": "object",
+      "required": ["product_id", "name", "category", "approval_no",
+                   "registrant", "link_owner"],
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": ["药品", "医疗器械", "保健食品", "普通食品", "普通商品"]
+        }
+      }
+    },
+    "parties": {
+      "type": "object",
+      "required": ["advertiser", "publisher_accounts", "beneficiary"]
+    },
+    "scripts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["version", "hash", "author", "state", "hits", "review"],
+        "properties": {
+          "hash": {"type": "string", "description": "脚本内容哈希，改动即新版本须重审"},
+          "state": {"type": "string", "enum": ["pending", "approved", "rejected"]},
+          "hits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["rule", "severity", "term", "excerpt"]
+            }
+          },
+          "review": {
+            "type": ["object", "null"],
+            "required": ["review_id", "reviewer", "decision",
+                         "reasons", "rule_version"],
+            "properties": {
+              "decision": {
+                "type": "string",
+                "enum": ["approve", "reject", "escalate", "reuse"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "placements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["placement_id", "channel", "account", "publisher",
+                     "script_version", "live", "started_at", "ended_at"]
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "message", "resolved"]
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["task_id", "kind", "assignee", "status", "due_at"],
+        "properties": {
+          "kind": {"type": "string", "enum": ["下架", "通知", "申诉", "整改"]},
+          "status": {"type": "string", "enum": ["open", "done", "cancelled"]},
+          "due_at": {"type": ["string", "null"],
+                     "description": "绝对截止时间 UTC ISO；服务恢复后据此判逾期"}
+        }
+      }
+    },
+    "current_version": {"type": ["integer", "null"]},
+    "timeline": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["seq", "at", "actor", "action", "detail"]
+      }
+    }
+  },
+  "additionalProperties": true
+}
